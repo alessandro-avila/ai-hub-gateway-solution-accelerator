@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.002.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5B2B551F-561C-4EAE-AAB6-57EDC9A844A8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "usage-ingestion-func", "src\usage-ingestion-function\usage-ingestion-func.csproj", "{68055E45-FC64-48ED-836E-97948F64144B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{68055E45-FC64-48ED-836E-97948F64144B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68055E45-FC64-48ED-836E-97948F64144B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68055E45-FC64-48ED-836E-97948F64144B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68055E45-FC64-48ED-836E-97948F64144B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{68055E45-FC64-48ED-836E-97948F64144B} = {5B2B551F-561C-4EAE-AAB6-57EDC9A844A8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5C1BF658-F13E-4EE9-A16B-D17C253A1E12}
+	EndGlobalSection
+EndGlobal

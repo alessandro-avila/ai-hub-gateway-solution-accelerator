@@ -231,12 +231,12 @@ param enableAzureAISearch bool = true
 param aiSearchInstances array = [
   {
     name: 'ai-search-swn'
-    url: 'https://REPLACE1.search.windows.net/'
+    url: 'https://ai-search-swn.search.windows.net/'
     description: 'AI Search Instance 1'
   }
   {
     name: 'ai-search-sec'
-    url: 'https://REPLACE2.search.windows.net/'
+    url: 'https://ai-search-sec.search.windows.net/'
     description: 'AI Search Instance 2'
   }
 ]
