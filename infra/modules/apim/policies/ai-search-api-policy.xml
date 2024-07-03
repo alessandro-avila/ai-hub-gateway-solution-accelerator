@@ -24,19 +24,9 @@
                             // Adding all Azure AI Search endpoints routes (which are set as APIM Backend)
                             routes.Add(new JObject()
                             {
-                                { "name", "Contoso Insurance KB" },
-                                { "location", "Switzerland North" },
-                                { "backend-id", "ai-search-swn" },
-                                { "priority", 1},
-                                { "isThrottling", false }, 
-                                { "retryAfter", DateTime.MinValue } 
-                            });
-
-                            routes.Add(new JObject()
-                            {
-                                { "name", "Northwind Outdoor KB" },
-                                { "location", "Sweden Central" },
-                                { "backend-id", "ai-search-sec" },
+                                { "name", "AI Search Chat Demo" },
+                                { "location", "East US 2" },
+                                { "backend-id", "ai-search-chat-demo" },
                                 { "priority", 1},
                                 { "isThrottling", false }, 
                                 { "retryAfter", DateTime.MinValue } 
@@ -52,7 +42,7 @@
                             clusters.Add(new JObject()
                             {
                                 { "deploymentName", "product-info" },
-                                { "routes", new JArray(routes[1]) }
+                                { "routes", new JArray(routes[0]) }
                             });
                         }
                         else

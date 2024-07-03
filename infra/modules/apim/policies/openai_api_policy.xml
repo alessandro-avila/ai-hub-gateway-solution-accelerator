@@ -68,18 +68,28 @@
                                 { "retryAfter", DateTime.MinValue }
                             });
 
+                            routes.Add(new JObject()
+                            {
+                                { "name", "EastUS2" },
+                                { "location", "eastus2" },
+                                { "backend-id", "openai-backend-3" },
+                                { "priority", 1},
+                                { "isThrottling", false },
+                                { "retryAfter", DateTime.MinValue }
+                            });
+
                             // For each deployment name, create a cluster with the routes that can serve it
                             // It is important in you OpenAI deployments to use the same name across instances
                             clusters.Add(new JObject()
                             {
                                 { "deploymentName", "chat" },
-                                { "routes", new JArray(routes[0], routes[1], routes[2]) }
+                                { "routes", new JArray(routes[0], routes[1], routes[2], routes[3]) }
                             });
 
                             clusters.Add(new JObject()
                             {
                                 { "deploymentName", "embedding" },
-                                { "routes", new JArray(routes[0], routes[1], routes[2]) }
+                                { "routes", new JArray(routes[0], routes[1], routes[2], routes[3]) }
                             });
 
                             clusters.Add(new JObject()

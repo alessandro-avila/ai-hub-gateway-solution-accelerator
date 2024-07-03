@@ -230,14 +230,9 @@ param enableAzureAISearch bool = true
 @description('Object containing AI Search existing instances. You can add more instances by adding more objects to this parameter.')
 param aiSearchInstances array = [
   {
-    name: 'ai-search-swn'
-    url: 'https://ai-search-swn.search.windows.net/'
+    name: 'ai-search-chat-demo'
+    url: 'https://gptkb-uwh5f4tmt5qnm.search.windows.net/'
     description: 'AI Search Instance 1'
-  }
-  {
-    name: 'ai-search-sec'
-    url: 'https://ai-search-sec.search.windows.net/'
-    description: 'AI Search Instance 2'
   }
 ]
 
