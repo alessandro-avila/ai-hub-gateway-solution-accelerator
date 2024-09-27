@@ -1,5 +1,4 @@
 @description('Name of the Logic App.')
-param name string
 param logicAppName string = 'ai-logicapp'
 
 @description('Location for the Service Bus Namespace.')
@@ -24,7 +23,6 @@ param dnsZoneRG string
 param dnsSubscriptionId string
 
 param logicAppPrivateEndpointName string
-param privateEndpointSubnetName string
 param logicAppDnsZoneName string
 
 resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {
@@ -34,7 +32,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {
 
 // Get existing subnet
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-01-01' existing = {
-  name: privateEndpointSubnetName
+  name: subnetName
   parent: vnet
 }
 
@@ -55,7 +53,7 @@ resource logicApp 'Microsoft.Logic/workflows@2019-05-01' = {
 }
 
 module privateEndpoint '../networking/private-endpoint.bicep' = {
-  name: '${logicAppName}-privateEndpoint'
+  name: '${logicApp.name}-privateEndpoint'
   params: {
     groupIds: [
       'workflow'

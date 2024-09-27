@@ -47,8 +47,20 @@ param applicationInsightsName string = ''
 @description('Name of the Application Insights for Function App resource. Leave blank to use default naming conventions.')
 param funcApplicationInsightsName string = ''
 
+@description('Name of the Container App resource. Leave blank to use default naming conventions.')
+param containerAppName string = ''
+
+@description('Name of the Cognitive Services Speech service. Leave blank to use default naming conventions.')
+param speechServiceName string = ''
+
 @description('Name of the Event Hub Namespace resource. Leave blank to use default naming conventions.')
 param eventHubNamespaceName string = ''
+
+@description('Name of the Service Bus Namespace resource. Leave blank to use default naming conventions.')
+param serviceBusNamespaceName string = ''
+
+@description('Name of the Logic App resource. Leave blank to use default naming conventions.')
+param streamingLogicAppName string = ''
 
 @description('Name of the Cosmos Db account resource. Leave blank to use default naming conventions.')
 param cosmosDbAccountName string = ''
@@ -70,9 +82,6 @@ param logicContentShareName string = 'usage-logic-content'
 
 @description('Provision stream analytics job, turn it on only if you need it. Azure Function App will be provisioned to process usage data from Event Hub.')
 param provisionStreamAnalytics bool = false
-
-@description('Name of the Cognitive Services Speech service.')  
-param speechServiceName string = ''
 
 //Networking - VNet
 param useExistingVnet bool = false
@@ -99,7 +108,11 @@ param dnsSubscriptionId string = ''
 var openAiPrivateDnsZoneName = 'privatelink.openai.azure.com'
 var keyVaultPrivateDnsZoneName = 'privatelink.vaultcore.azure.net'
 var monitorPrivateDnsZoneName = 'privatelink.monitor.azure.com'
-var eventHubPrivateDnsZoneName = 'privatelink.servicebus.windows.net'
+var eventHubPrivateDnsZoneName = 'privatelink.eventhub.windows.net'
+var serviceBusPrivateDnsZoneName = 'privatelink.servicebus.windows.net'
+var speechAiPrivateDnsZoneName = 'privatelink.speech.azure.com'
+var logicAppPrivateDnsZoneName = 'privatelink.logic.azure.com'
+var containerAppsPrivateDnsZoneName = 'privatelink.containerapps.azure.com'
 var cosmosDbPrivateDnsZoneName = 'privatelink.documents.azure.com'
 var storageBlobPrivateDnsZoneName = 'privatelink.blob.core.windows.net'
 var storageFilePrivateDnsZoneName = 'privatelink.file.core.windows.net'
@@ -393,6 +406,25 @@ module monitoring './modules/monitor/monitoring.bicep' = {
   ]
 }
 
+module containerApp 'modules/containerapp/containerapp.bicep' = {
+  name: containerAppName
+  scope: resourceGroup
+  params: {
+    containerAppName: !empty(containerAppName) ? containerAppName : 'containerapp-${resourceToken}'
+    location: location
+    vnetName: useExistingVnet ? vnetExisting.outputs.vnetName : vnet.outputs.vnetName
+    subnetName: useExistingVnet ? vnetExisting.outputs.privateEndpointSubnetName : vnet.outputs.privateEndpointSubnetName
+    vnetResourceGroup: useExistingVnet ? vnetExisting.outputs.vnetRG : vnet.outputs.vnetRG
+    tags: tags
+    logAnalyticsWorkspaceId: monitoring.outputs.logAnalyticsWorkspaceId
+  }
+  dependsOn: [
+    vnet
+    vnetExisting
+    monitoring
+  ]
+}
+ 
 @batchSize(1)
 module openAis 'modules/ai/cognitiveservices.bicep' = [for (config, i) in items(openAiInstances): {
   name: '${config.value.name}-${resourceToken}'
@@ -424,16 +456,19 @@ module openAis 'modules/ai/cognitiveservices.bicep' = [for (config, i) in items(
   ]
 }]
 
-module speech './modules/ai/speech-ai.bicep' = {  
+module speech './modules/ai/speech.bicep' = {  
   name: 'speech'  
   scope: resourceGroup  
   params: {  
-    speechServiceName: speechServiceName  
+    speechServiceName: !empty(speechServiceName) ? speechServiceName : '${abbrs.cognitiveServicesAccounts}${resourceToken}' 
     location: location  
     tags: tags  
     vnetName: useExistingVnet ? vnetExisting.outputs.vnetName : vnet.outputs.vnetName  
     subnetName: useExistingVnet ? vnetExisting.outputs.privateEndpointSubnetName : vnet.outputs.privateEndpointSubnetName  
-    vnetResourceGroup: useExistingVnet ? vnetExisting.outputs.vnetRG : vnet.outputs.vnetRG  
+    vNetRG: useExistingVnet ? vnetExisting.outputs.vnetRG : vnet.outputs.vnetRG
+    vNetLocation: useExistingVnet ? vnetExisting.outputs.location : vnet.outputs.location
+    speechAiDnsZoneName: speechAiPrivateDnsZoneName
+    speechAiPrivateEndpointName: 'speech-ai-pe-${resourceToken}'
     dnsZoneRG: !empty(dnsZoneRG) ? dnsZoneRG : resourceGroup.name  
     dnsSubscriptionId: !empty(dnsSubscriptionId) ? dnsSubscriptionId : subscription().subscriptionId  
   }  
@@ -456,6 +491,49 @@ module eventHub './modules/event-hub/event-hub.bicep' = {
     privateEndpointSubnetName: useExistingVnet ? vnetExisting.outputs.privateEndpointSubnetName : vnet.outputs.privateEndpointSubnetName
     eventHubDnsZoneName: eventHubPrivateDnsZoneName
     vNetRG: useExistingVnet ? vnetExisting.outputs.vnetRG : vnet.outputs.vnetRG
+    dnsZoneRG: !empty(dnsZoneRG) ? dnsZoneRG : resourceGroup.name
+    dnsSubscriptionId: !empty(dnsSubscriptionId) ? dnsSubscriptionId : subscription().subscriptionId
+  }
+  dependsOn: [
+    vnet
+    vnetExisting
+  ]
+}
+
+module serviceBus './modules/integration/servicebus.bicep' = {
+  name: 'service-bus'
+  scope: resourceGroup
+  params: {
+    name: !empty(serviceBusNamespaceName) ? serviceBusNamespaceName : '${abbrs.serviceBusNamespaces}${resourceToken}'
+    serviceBusQueueName: 'queue-${resourceToken}'
+    location: location
+    tags: tags
+    serviceBusDnsZoneName: serviceBusPrivateDnsZoneName
+    serviceBusPrivateEndpointName: 'servicebus-pe-${resourceToken}'
+    vNetName: useExistingVnet ? vnetExisting.outputs.vnetName : vnet.outputs.vnetName
+    subnetName: useExistingVnet ? vnetExisting.outputs.privateEndpointSubnetName : vnet.outputs.privateEndpointSubnetName
+    vNetRG: useExistingVnet ? vnetExisting.outputs.vnetRG : vnet.outputs.vnetRG
+    dnsZoneRG: !empty(dnsZoneRG) ? dnsZoneRG : resourceGroup.name
+    dnsSubscriptionId: !empty(dnsSubscriptionId) ? dnsSubscriptionId : subscription().subscriptionId
+  }
+  dependsOn: [
+    vnet
+    vnetExisting
+  ]
+}
+
+module streamingLogicApp './modules/integration/logicapps.bicep' = {
+  name: 'streaming-logic-app'
+  scope: resourceGroup
+  params: {
+    logicAppName: !empty(streamingLogicAppName) ? streamingLogicAppName : 'streaming-logicapp-${resourceToken}'
+    location: location
+    tags: tags
+    vNetName: useExistingVnet ? vnetExisting.outputs.vnetName : vnet.outputs.vnetName
+    subnetName: useExistingVnet ? vnetExisting.outputs.privateEndpointSubnetName : vnet.outputs.privateEndpointSubnetName
+    vNetRG: useExistingVnet ? vnetExisting.outputs.vnetRG : vnet.outputs.vnetRG
+    logicAppPrivateEndpointName: 'logicapp-pe-${resourceToken}'
+    logicAppDnsZoneName: logicAppPrivateDnsZoneName
     dnsZoneRG: !empty(dnsZoneRG) ? dnsZoneRG : resourceGroup.name
     dnsSubscriptionId: !empty(dnsSubscriptionId) ? dnsSubscriptionId : subscription().subscriptionId
   }

@@ -1,9 +1,9 @@
 @description('Name of the Service Bus Namespace.')  
 param name string
 
-@description('Name of the Service Bus.')
-param serviceBusName string = 'ai-usage'
-  
+@description('Name of the Service Bus Queue.')
+param serviceBusQueueName string = 'ai-queue'
+
 @description('Location for the Service Bus Namespace.')  
 param location string  
 
@@ -12,9 +12,6 @@ param sku string = 'Standard'
   
 @description('Tags to be applied to resources.')  
 param tags object = {}  
-  
-@description('Name of the Service Bus Queue.')  
-param queueName string  
   
 @description('Maximum size of the queue in megabytes.')  
 @allowed([1024, 2048, 3072, 4096, 5120])  
@@ -42,19 +39,19 @@ param dnsZoneRG string
 param dnsSubscriptionId string  
   
 resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {  
-  name: vNetName  
-  scope: resourceGroup(vNetRG)  
+  name: vNetName
+  scope: resourceGroup(vNetRG)
 }  
   
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2022-01-01' existing = {  
-  name: subnetName  
-  parent: vnet  
+  name: subnetName
+  parent: vnet
 }  
   
 resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-06-01-preview' = {  
-  name: name  
-  location: location  
-  sku: {  
+  name: name
+  location: location
+  sku: {
     name: sku
     tier: sku
   } 
@@ -63,7 +60,7 @@ resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-06-01-preview
   
 resource serviceBusQueue 'Microsoft.ServiceBus/namespaces/queues@2021-06-01-preview' = {  
   parent: serviceBusNamespace  
-  name: queueName  
+  name: serviceBusQueueName  
   properties: {  
     maxSizeInMegabytes: maxQueueSizeInMB  
     defaultMessageTimeToLive: 'P14D' // 14 days  
@@ -72,7 +69,7 @@ resource serviceBusQueue 'Microsoft.ServiceBus/namespaces/queues@2021-06-01-prev
 }  
   
 module privateEndpoint '../networking/private-endpoint.bicep' = {
-  name: '${serviceBusName}-privateEndpoint'
+  name: '${serviceBusNamespace.name}-privateEndpoint'
   params: {
     groupIds: [
       'namespace'

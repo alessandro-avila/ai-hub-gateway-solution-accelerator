@@ -68,7 +68,7 @@ resource containerApp 'Microsoft.App/containerApps@2022-03-01' = {
           name: 'app'
           image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
           resources: {
-            cpu: '0.25'
+            cpu:'0.25'
             memory: '0.5Gi'
           }
         }
