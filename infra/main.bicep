@@ -68,6 +68,9 @@ param functionContentShareName string = 'usage-function-content'
 @description('Provision stream analytics job, turn it on only if you need it. Azure Function App will be provisioned to process usage data from Event Hub.')
 param provisionStreamAnalytics bool = false
 
+@description('Name of the Cognitive Services Speech service.')  
+param speechServiceName string = ''
+
 //Networking - VNet
 param useExistingVnet bool = false
 param existingVnetRG string = ''
@@ -411,6 +414,26 @@ module openAis 'modules/ai/cognitiveservices.bicep' = [for (config, i) in items(
     apimManagedIdentity
   ]
 }]
+
+module speech './modules/ai/speech-ai.bicep' = {  
+  name: 'speech'  
+  scope: resourceGroup  
+  params: {  
+    speechServiceName: speechServiceName  
+    location: location  
+    tags: tags  
+    vnetName: useExistingVnet ? vnetExisting.outputs.vnetName : vnet.outputs.vnetName  
+    subnetName: useExistingVnet ? vnetExisting.outputs.privateEndpointSubnetName : vnet.outputs.privateEndpointSubnetName  
+    vnetResourceGroup: useExistingVnet ? vnetExisting.outputs.vnetRG : vnet.outputs.vnetRG  
+    dnsZoneRG: !empty(dnsZoneRG) ? dnsZoneRG : resourceGroup.name  
+    dnsSubscriptionId: !empty(dnsSubscriptionId) ? dnsSubscriptionId : subscription().subscriptionId  
+  }  
+  dependsOn: [  
+    vnet  
+    vnetExisting
+    apimManagedIdentity
+  ]  
+}  
 
 module eventHub './modules/event-hub/event-hub.bicep' = {
   name: 'event-hub'
