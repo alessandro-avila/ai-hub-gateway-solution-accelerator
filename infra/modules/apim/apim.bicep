@@ -96,7 +96,7 @@ module apimOpenaiApi './api.bicep' = {
     apiDispalyName: 'Azure OpenAI API'
     subscriptionRequired: entraAuth ? false:true
     subscriptionKeyName: 'api-key'
-    openApiSpecification: string(loadYamlContent('./openai-api/oai-api-spec-2024-05-01-preview.yaml'))
+    openApiSpecification: string(loadYamlContent('./openai-api/oai-api-spec-2024-06-01.yaml'))
     apiDescription: 'Azure OpenAI API'
     policyDocument: loadTextContent('./policies/openai_api_policy.xml')
     enableAPIDeployment: true
@@ -106,7 +106,9 @@ module apimOpenaiApi './api.bicep' = {
     validateRoutesPolicyFragment
     backendRoutingPolicyFragment
     openAIUsagePolicyFragment
+    openAIUsageStreamingPolicyFragment
     openAiBackends
+    throttlingEventsPolicyFragment
   ]
 }
 
@@ -130,6 +132,7 @@ module apimAiSearchApi './api.bicep' = if (enableAzureAISearch) {
     validateRoutesPolicyFragment
     backendRoutingPolicyFragment
     aiUsagePolicyFragment
+    throttlingEventsPolicyFragment
   ]
 }
 
@@ -386,6 +389,17 @@ resource openAIUsagePolicyFragment 'Microsoft.ApiManagement/service/policyFragme
   ]
 }
 
+resource openAIUsageStreamingPolicyFragment 'Microsoft.ApiManagement/service/policyFragments@2022-08-01' = {
+  parent: apimService
+  name: 'openai-usage-streaming'
+  properties: {
+    value: loadTextContent('./policies/frag-openai-usage-streaming.xml')
+    format: 'rawxml'
+  }
+  dependsOn: [
+  ]
+}
+
 resource aiUsagePolicyFragment 'Microsoft.ApiManagement/service/policyFragments@2022-08-01' = {
   parent: apimService
   name: 'ai-usage'
@@ -396,6 +410,15 @@ resource aiUsagePolicyFragment 'Microsoft.ApiManagement/service/policyFragments@
   dependsOn: [
     ehUsageLogger
   ]
+}
+
+resource throttlingEventsPolicyFragment 'Microsoft.ApiManagement/service/policyFragments@2022-08-01' = {
+  parent: apimService
+  name: 'throttling-events'
+  properties: {
+    value: loadTextContent('./policies/frag-throttling-events.xml')
+    format: 'rawxml'
+  }
 }
 
 resource apimLogger 'Microsoft.ApiManagement/service/loggers@2022-08-01' = {
@@ -421,6 +444,7 @@ resource apimAppInsights 'Microsoft.ApiManagement/service/diagnostics@2022-08-01
     verbosity: 'information'
     logClientIp: true
     loggerId: apimLogger.id
+    metrics: true
     sampling: {
       samplingType: 'fixed'
       percentage: 100
