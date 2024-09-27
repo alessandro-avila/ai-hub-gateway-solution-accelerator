@@ -6,12 +6,15 @@ param privateEndpointSubnetName string
 param privateEndpointNsgName string
 param functionAppSubnetName string
 param functionAppNsgName string
+param containerAppSubnetName string
+param containerAppNsgName string
 param apimRouteTableName string
 param privateDnsZoneNames array
 param vnetAddressPrefix string
 param apimSubnetAddressPrefix string
 param privateEndpointSubnetAddressPrefix string
 param functionAppSubnetAddressPrefix string
+param containerAppSubnetAddressPrefix string
 param tags object = {}
 
 resource apimNsg 'Microsoft.Network/networkSecurityGroups@2020-07-01' = {
@@ -146,6 +149,15 @@ resource functionAppNsg 'Microsoft.Network/networkSecurityGroups@2020-07-01' = {
   }
 }
 
+resource containerAppNsg 'Microsoft.Network/networkSecurityGroups@2020-07-01' = {
+  name: containerAppNsgName
+  location: location
+  tags: union(tags, { 'azd-service-name': containerAppNsgName })
+  properties: {
+    securityRules: []
+  }
+}
+
 resource apimRouteTable 'Microsoft.Network/routeTables@2023-11-01' = {
   name: apimRouteTableName
   location: location
@@ -217,6 +229,25 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
           ]
         }
       }
+      {
+        name: containerAppSubnetName
+        properties: {
+          addressPrefix: containerAppSubnetAddressPrefix
+          networkSecurityGroup: containerAppNsg.id == '' ? null : {
+            id: containerAppNsg.id
+          }
+          privateEndpointNetworkPolicies: 'Enabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
+          delegations: [
+            {
+              name: 'Microsoft.App/environments'
+              properties: {
+                serviceName: 'Microsoft.App/environments'
+              }
+            }
+          ]
+        }
+      }
     ]
   }
   
@@ -231,6 +262,10 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
 
   resource functionAppSubnet 'subnets' existing = {
     name: functionAppSubnetName
+  }
+
+  resource containerAppSubnet 'subnets' existing = {
+    name: containerAppSubnetName
   }
 }
 
@@ -253,5 +288,7 @@ output privateEndpointSubnetName string = virtualNetwork::privateEndpointSubnet.
 output privateEndpointSubnetId string = virtualNetwork::privateEndpointSubnet.id
 output functionAppSubnetName string = virtualNetwork::functionAppSubnet.name
 output functionAppSubnetId string = virtualNetwork::functionAppSubnet.id
+output containerAppSubnetName string = virtualNetwork::containerAppSubnet.name
+output containerAppSubnetId string = virtualNetwork::containerAppSubnet.id
 output location string = virtualNetwork.location
 output vnetRG string = resourceGroup().name

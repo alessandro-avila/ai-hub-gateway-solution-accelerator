@@ -8,7 +8,7 @@ param serviceBusQueueName string = 'ai-queue'
 param location string  
 
 @description('SKU for the Service Bus Namespace.')
-param sku string = 'Standard'
+param sku string = 'Premium'
   
 @description('Tags to be applied to resources.')  
 param tags object = {}  

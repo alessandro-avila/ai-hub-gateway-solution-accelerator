@@ -83,23 +83,26 @@ param logicContentShareName string = 'usage-logic-content'
 @description('Provision stream analytics job, turn it on only if you need it. Azure Function App will be provisioned to process usage data from Event Hub.')
 param provisionStreamAnalytics bool = false
 
-//Networking - VNet
+// Networking - VNet
 param useExistingVnet bool = false
 param existingVnetRG string = ''
 param vnetName string = ''
 param apimSubnetName string = ''
 param privateEndpointSubnetName string = ''
 param functionAppSubnetName string = ''
+param containerAppSubnetName string = ''
 
 param apimNsgName string = ''
 param privateEndpointNsgName string = ''
 param functionAppNsgName string = ''
+param containerAppNsgName string = ''
 
 // Networking - Address Space
-param vnetAddressPrefix string = '10.170.0.0/24'
+param vnetAddressPrefix string = '10.170.0.0/22'
 param apimSubnetPrefix string = '10.170.0.0/26'
 param privateEndpointSubnetPrefix string = '10.170.0.64/26'
 param functionAppSubnetPrefix string = '10.170.0.128/26'
+param containerAppSubnetPrefix string = '10.170.2.0/23'
 
 // Networking - Private DNS
 param dnsZoneRG string = ''
@@ -124,6 +127,10 @@ var privateDnsZoneNames = [
   keyVaultPrivateDnsZoneName
   monitorPrivateDnsZoneName
   eventHubPrivateDnsZoneName 
+  serviceBusPrivateDnsZoneName
+  speechAiPrivateDnsZoneName
+  logicAppPrivateDnsZoneName
+  containerAppsPrivateDnsZoneName
   cosmosDbPrivateDnsZoneName
   storageBlobPrivateDnsZoneName
   storageFilePrivateDnsZoneName
@@ -275,7 +282,7 @@ param chatGptModelVersion string = '0613'
 param chatGptDeploymentName string = 'chat'
 
 @description('Name of the Chat GPT model.')
-param chatGptModelName string = 'gpt-35-turbo'
+param chatGptModelName string = 'gpt-4'
 
 @description('Name of the embedding model.')
 param embeddingGptModelName string = 'text-embedding-ada-002'
@@ -331,10 +338,13 @@ module vnet './modules/networking/vnet.bicep' = if(!useExistingVnet) {
     privateEndpointNsgName: !empty(privateEndpointNsgName) ? privateEndpointNsgName : 'nsg-pe-${resourceToken}'
     functionAppSubnetName: !empty(functionAppSubnetName) ? functionAppSubnetName : 'snet-functionapp'
     functionAppNsgName: !empty(functionAppNsgName) ? functionAppNsgName : 'nsg-functionapp-${resourceToken}'
+    containerAppSubnetName: !empty(containerAppSubnetName) ? containerAppSubnetName : 'snet-containerapp'
+    containerAppNsgName: !empty(containerAppNsgName) ? containerAppNsgName : 'nsg-containerapp-${resourceToken}'
     vnetAddressPrefix: vnetAddressPrefix
     apimSubnetAddressPrefix: apimSubnetPrefix
     privateEndpointSubnetAddressPrefix: privateEndpointSubnetPrefix
     functionAppSubnetAddressPrefix: functionAppSubnetPrefix
+    containerAppSubnetAddressPrefix: containerAppSubnetPrefix
     location: location
     tags: tags
     privateDnsZoneNames: privateDnsZoneNames
@@ -353,6 +363,7 @@ module vnetExisting './modules/networking/vnet-existing.bicep' = if(useExistingV
     apimSubnetName: !empty(apimSubnetName) ? apimSubnetName : 'snet-apim'
     privateEndpointSubnetName: !empty(privateEndpointSubnetName) ? privateEndpointSubnetName : 'snet-private-endpoint'
     functionAppSubnetName: !empty(functionAppSubnetName) ? functionAppSubnetName : 'snet-functionapp'
+    containerAppSubnetName: !empty(containerAppSubnetName) ? containerAppSubnetName : 'snet-containerapp'
     vnetRG: existingVnetRG
   }
   dependsOn: [
@@ -407,13 +418,13 @@ module monitoring './modules/monitor/monitoring.bicep' = {
 }
 
 module containerApp 'modules/containerapp/containerapp.bicep' = {
-  name: containerAppName
+  name: 'container-app'
   scope: resourceGroup
   params: {
     containerAppName: !empty(containerAppName) ? containerAppName : 'containerapp-${resourceToken}'
     location: location
     vnetName: useExistingVnet ? vnetExisting.outputs.vnetName : vnet.outputs.vnetName
-    subnetName: useExistingVnet ? vnetExisting.outputs.privateEndpointSubnetName : vnet.outputs.privateEndpointSubnetName
+    subnetName: useExistingVnet ? vnetExisting.outputs.containerAppSubnetName : vnet.outputs.containerAppSubnetName
     vnetResourceGroup: useExistingVnet ? vnetExisting.outputs.vnetRG : vnet.outputs.vnetRG
     tags: tags
     logAnalyticsWorkspaceId: monitoring.outputs.logAnalyticsWorkspaceId
@@ -457,7 +468,7 @@ module openAis 'modules/ai/cognitiveservices.bicep' = [for (config, i) in items(
 }]
 
 module speech './modules/ai/speech.bicep' = {  
-  name: 'speech'  
+  name: 'ai-speech'  
   scope: resourceGroup  
   params: {  
     speechServiceName: !empty(speechServiceName) ? speechServiceName : '${abbrs.cognitiveServicesAccounts}${resourceToken}' 
