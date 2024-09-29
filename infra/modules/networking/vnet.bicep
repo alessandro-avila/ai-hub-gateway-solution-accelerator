@@ -238,14 +238,6 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
           }
           privateEndpointNetworkPolicies: 'Enabled'
           privateLinkServiceNetworkPolicies: 'Enabled'
-          delegations: [
-            {
-              name: 'Microsoft.App/environments'
-              properties: {
-                serviceName: 'Microsoft.App/environments'
-              }
-            }
-          ]
         }
       }
     ]

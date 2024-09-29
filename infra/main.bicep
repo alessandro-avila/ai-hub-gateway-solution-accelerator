@@ -282,7 +282,7 @@ param chatGptModelVersion string = '0613'
 param chatGptDeploymentName string = 'chat'
 
 @description('Name of the Chat GPT model.')
-param chatGptModelName string = 'gpt-4'
+param chatGptModelName string = 'gpt-35-turbo'
 
 @description('Name of the embedding model.')
 param embeddingGptModelName string = 'text-embedding-ada-002'
@@ -481,7 +481,7 @@ module speech './modules/ai/speech.bicep' = {
     speechAiDnsZoneName: speechAiPrivateDnsZoneName
     speechAiPrivateEndpointName: 'speech-ai-pe-${resourceToken}'
     dnsZoneRG: !empty(dnsZoneRG) ? dnsZoneRG : resourceGroup.name  
-    dnsSubscriptionId: !empty(dnsSubscriptionId) ? dnsSubscriptionId : subscription().subscriptionId  
+    dnsSubscriptionId: !empty(dnsSubscriptionId) ? dnsSubscriptionId : subscription().subscriptionId
   }  
   dependsOn: [  
     vnet  

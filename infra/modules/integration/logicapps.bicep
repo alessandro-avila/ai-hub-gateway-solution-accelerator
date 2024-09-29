@@ -22,7 +22,10 @@ param dnsZoneRG string
 @description('DNS Subscription ID')
 param dnsSubscriptionId string
 
+@description('Private endpoint name for the Logic App.')
 param logicAppPrivateEndpointName string
+
+@description('DNS Zone name for the Logic App.')
 param logicAppDnsZoneName string
 
 resource vnet 'Microsoft.Network/virtualNetworks@2022-01-01' existing = {
@@ -52,20 +55,20 @@ resource logicApp 'Microsoft.Logic/workflows@2019-05-01' = {
   }
 }
 
-module privateEndpoint '../networking/private-endpoint.bicep' = {
-  name: '${logicApp.name}-privateEndpoint'
-  params: {
-    groupIds: [
-      'workflow'
-    ]
-    dnsZoneName: logicAppDnsZoneName
-    name: logicAppPrivateEndpointName
-    privateLinkServiceId: logicApp.id
-    location: location
-    dnsZoneRG: dnsZoneRG
-    privateEndpointSubnetId: subnet.id
-    dnsSubId: dnsSubscriptionId
-  }
-}
+// module privateEndpoint '../networking/private-endpoint.bicep' = {
+//   name: '${logicApp.name}-privateEndpoint'
+//   params: {
+//     groupIds: [
+//       'workflow'
+//     ]
+//     dnsZoneName: logicAppDnsZoneName
+//     name: logicAppPrivateEndpointName
+//     privateLinkServiceId: logicApp.id
+//     location: location
+//     dnsZoneRG: dnsZoneRG
+//     privateEndpointSubnetId: subnet.id
+//     dnsSubId: dnsSubscriptionId
+//   }
+// }
 
 output logicAppName string = logicApp.name

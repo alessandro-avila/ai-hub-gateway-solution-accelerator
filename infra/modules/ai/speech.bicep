@@ -22,6 +22,8 @@ param vNetRG string
 param dnsZoneRG string
 @description('Speech service DNS zone name')
 param speechAiDnsZoneName string
+@description('Public network access for the Cognitive Services Speech service.')
+param publicNetworkAccess string = 'Disabled'
 @description('Speech service private endpoint name.')
 param speechAiPrivateEndpointName string
 @description('DNS Subscription ID')
@@ -56,6 +58,8 @@ resource account 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
     }
   }
   properties: {
+    publicNetworkAccess: publicNetworkAccess
+    customSubDomainName: toLower(speechServiceName)
     networkAcls: {
       defaultAction: 'Deny'
       virtualNetworkRules: [
